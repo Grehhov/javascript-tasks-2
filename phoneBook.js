@@ -1,56 +1,51 @@
 'use strict';
 
 var phoneBook = []; // Здесь вы храните записи как хотите
-
+var isPhone = /\+?\d? ?(\d{3}|\(\d{3}\))? ?\d{3}( |-)?\d+( |-)?\d{3}/;
+var isEmail = /[\wа-я.-]+@[a-zа-я0-9]+[a-zа-я0-9.-]*[a-zа-я0-9]+\.[a-zа-я]+/i;
 /*
    Функция добавления записи в телефонную книгу.
    На вход может прийти что угодно, будьте осторожны.
 */
 module.exports.add = function add(name, phone, email) {
-	if (isPhone(phone) && isEmail(email)) {
+	if (isPhone.test(phone) && isEmail.test(email)) {
 		phoneBook.push({
 			name: name,
 			phone: phone,
 			email: email
 		});
 		console.log('Запись добавлена');
+		return true;
 	} else {
 		console.log('Запись неверна');
+		return false;
 	}
     // Ваша невероятная магия здесь
 };
-
-function isPhone(phone) {
-	return /\+?\d? ?(\d{3}|\(\d{3}\))? ?\d{3}( |-)?\d+( |-)?\d{3}/.test(phone);
-}
-
-function isEmail(email) {
-	return /[\wа-я.-]+@[a-zа-я0-9]+[\wа-я.-]*[a-zа-я0-9]+\.[a-zа-я]+/i.test(email);
-}
 
 /*
    Функция поиска записи в телефонную книгу.
    Поиск ведется по всем полям.
 */
 module.exports.find = function find(query) {
-	var contacts = findContact(query);
-	for(var item in contacts) {
-		console.log(contacts[item].name + ', ' + contacts[item].phone + ', ' + contacts[item].email);
-	}
-    // Ваша удивительная магия здесь
-};
-
-
-function findContact(query) {
 	var contacts = [];
 	for (var i = 0; i < phoneBook.length; i++) {
 		for (var item in phoneBook[i]) {
-			if (phoneBook[i][item].indexOf(query) != -1) {
+			if (phoneBook[i][item].indexOf(query) !== -1) {
 				contacts.push(phoneBook[i]);
 			}
 		}
 	}
+	printContacts(contacts);
 	return contacts;
+    // Ваша удивительная магия здесь
+};
+
+
+function printContacts(contacts) {
+	for(var item in contacts) {
+		console.log(contacts[item].name + ', ' + contacts[item].phone + ', ' + contacts[item].email);
+	}
 }
 
 /*
@@ -58,17 +53,20 @@ function findContact(query) {
 */
 module.exports.remove = function remove(query) {
 	var count = 0;
+	var removedContacts = [];
 	for (var i = 0; i < phoneBook.length; i++) {
 		for (var item in phoneBook[i]) {
 			var index = phoneBook[i][item].indexOf(query);
 			if (index !== -1) {
-				delete phoneBook[i];
+				removedContacts.push(phoneBook[i]);
+				phoneBook.splice(i, i - 1);
 				count++;
 				break;
 			}
 		}
 	}
 	console.log('Удален(о) ' + count + ' контакт(ов)')
+	return removedContacts;
     // Ваша необьяснимая магия здесь
 
 };
@@ -78,7 +76,15 @@ module.exports.remove = function remove(query) {
 */
 module.exports.importFromCsv = function importFromCsv(filename) {
     var data = require('fs').readFileSync(filename, 'utf-8');
-
+	var count = 0;
+	var lines = data.split('\r\n');
+	for (var i = 0; i < lines.length - 1; i++) {
+		var contact = lines[i].split(';');
+		if (this.add(contact[0], contact[1], contact[2])) {
+			count++;
+		}
+	}
+	console.log('Добавлен(о) ' + count + ' контакт(ов)')
     // Ваша чёрная магия:
     // - Разбираете записи из `data`
     // - Добавляете каждую запись в книгу
@@ -88,13 +94,32 @@ module.exports.importFromCsv = function importFromCsv(filename) {
    Функция вывода всех телефонов в виде ASCII (задача со звёздочкой!).
 */
 module.exports.showTable = function showTable() {
-	var number = 0;
-	for (var i = 0; i < phoneBook.length; i++) {
-		if (phoneBook[i] !== undefined) {
-			number++;
-			console.log(number + ') ' + phoneBook[i].name + ', ' + phoneBook[i].phone + ', ' + phoneBook[i].email);
+	var maxLengthName = 3;
+	var maxLengthPhone = 7;
+	var maxLengthEmail = 5;
+
+	for(var i = 0; i < phoneBook.length; i++) {
+		if (phoneBook[i].name.length > maxLengthName) {
+			maxLengthName = phoneBook[i].name.length;
+		}
+		if (phoneBook[i].phone.length > maxLengthPhone) {
+			maxLengthPhone = phoneBook[i].phone.length;
+		}
+		if (phoneBook[i].email.length > maxLengthEmail) {
+			maxLengthEmail = phoneBook[i].email.length;
 		}
 	}
-    // Ваша чёрная магия здесь
+	
+	console.log('┌' + '-'.repeat(maxLengthName) + '-' + '-'.repeat(maxLengthPhone) + '-' + '-'.repeat(maxLengthEmail) + '┐');
+	console.log('|' + 'Имя' + ' '.repeat(maxLengthName - 3) + '|' + 'Телефон' + ' '.repeat(maxLengthPhone - 7) + '|' + 'Email' + ' '.repeat(maxLengthEmail - 5) + '|');
+	console.log('|' + '-'.repeat(maxLengthName) + '-' + '-'.repeat(maxLengthPhone) + '-' + '-'.repeat(maxLengthEmail) + '|');
+	
+	for(var i = 0; i < phoneBook.length; i++) {
+		var cnt = phoneBook[i];
+		console.log('|' + cnt.name + ' '.repeat(maxLengthName - cnt.name.length) + '|' + cnt.phone + ' '.repeat(maxLengthPhone - cnt.phone.length) + '|' + cnt.email + ' '.repeat(maxLengthEmail - cnt.email.length) + '|');
+	}
+	
+	console.log('└' + '-'.repeat(maxLengthName) + '-' + '-'.repeat(maxLengthPhone) + '-' + '-'.repeat(maxLengthEmail) + '┘');
+	// Ваша чёрная магия здесь
 
 };
