@@ -1,23 +1,21 @@
 'use strict';
 
 var phoneBook = []; // Здесь вы храните записи как хотите
-var isPhone = /\+?\d? ?(\d{3}|\(\d{3}\))? ?\d{3}( |-)?\d+( |-)?\d{3}/;
-var isEmail = /[\wа-я.-]+@[a-zа-я0-9]+[a-zа-я0-9.-]*[a-zа-я0-9]+\.[a-zа-я]+/i;
+const PHONE_REGEXP = /\+?\d? ?(\d{3}|\(\d{3}\))? ?\d{3}( |-)?\d+( |-)?\d{3}/;
+const EMAIL_REGEXP = /[\wа-я.-]+@[a-zа-я0-9]+[a-zа-я0-9.-]*[a-zа-я0-9]+\.[a-zа-я]+/i;
 /*
    Функция добавления записи в телефонную книгу.
    На вход может прийти что угодно, будьте осторожны.
 */
 module.exports.add = function add(name, phone, email) {
-	if (isPhone.test(phone) && isEmail.test(email)) {
+	if (PHONE_REGEXP.test(phone) && EMAIL_REGEXP.test(email)) {
 		phoneBook.push({
 			name: name,
 			phone: phone,
 			email: email
 		});
-		console.log('Запись добавлена');
 		return true;
 	} else {
-		console.log('Запись неверна');
 		return false;
 	}
     // Ваша невероятная магия здесь
@@ -30,7 +28,7 @@ module.exports.add = function add(name, phone, email) {
 module.exports.find = function find(query) {
 	var contacts = [];
 	for (var i = 0; i < phoneBook.length; i++) {
-		for (var item in phoneBook[i]) {
+		for (var item in phoneBook[i]) { //не хочет работать for of с phoneBook[i]
 			if (phoneBook[i][item].indexOf(query) !== -1) {
 				contacts.push(phoneBook[i]);
 			}
@@ -43,8 +41,8 @@ module.exports.find = function find(query) {
 
 
 function printContacts(contacts) {
-	for(var item in contacts) {
-		console.log(contacts[item].name + ', ' + contacts[item].phone + ', ' + contacts[item].email);
+	for(var item of contacts) {
+		console.log(item.name + ', ' + item.phone + ', ' + item.email);
 	}
 }
 
@@ -55,7 +53,7 @@ module.exports.remove = function remove(query) {
 	var count = 0;
 	var removedContacts = [];
 	for (var i = 0; i < phoneBook.length; i++) {
-		for (var item in phoneBook[i]) {
+		for (var item in phoneBook[i]) { //не хочет работать for of с phoneBook[i]
 			var index = phoneBook[i][item].indexOf(query);
 			if (index !== -1) {
 				removedContacts.push(phoneBook[i]);
